@@ -1,0 +1,36 @@
+# ==== Python / env ====
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# ==== Data & model artifacts ====
+datasets/
+data/
+outputs/
+runs/
+wandb/
+*.mp4
+*.mov
+*.avi
+*.zip
+*.onnx
+*.pth
+
+# ==== Logs ====
+*.log
+*.json
+
+# ==== Jupyter ====
+.ipynb_checkpoints/
+
+# ==== OS files ====
+Thumbs.db
+
+# ==== Mobile App (React Native / Expo) ====
+mobile_app/node_modules/
+mobile_app/.expo/
+mobile_app/.expo-shared/
+mobile_app/android/
+mobile_app/ios/
+mobile_app/web-build/
