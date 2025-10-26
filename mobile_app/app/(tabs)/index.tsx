@@ -10,7 +10,7 @@ export default function HomeScreen(){
   
   const handleTestApi = async() => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/live")
+      const response = await fetch("http://192.168.1.218:8000/live")
       const data = await response.json();
       setResult(data);
     } catch (error){

@@ -3,17 +3,28 @@ from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 import tempfile
 import shutil
-import numpy as np
-import torch
 from ultralytics import YOLO
 from scripts.utils import get_device, smooth_point, detect_up, detect_down, score_prediction
 from scripts.shot_tracker import process_video
+import json
+from datetime import datetime
 
 #create fastapi instance
 app = FastAPI(title="Basketball Shot Tracker API")
-
+LOG_FILE = "shot_log.json"
 #ensure output folder exists 
 Path("outputs").mkdir(exist_ok=True)
+
+#for a user, get their past shot tracking history to plot in a line chart
+@app.get("/get_history")
+def get_history():
+    try:
+        with open(LOG_FILE, "r") as f:
+            data = json.load(f)
+        return {"sessions": data}
+    except:
+        return {"sessions": data}
+
 
 @app.get("/")
 def home():
@@ -52,12 +63,13 @@ async def upload_video(file: UploadFile = File(...), draw: bool=False):
     #get results from processing 
     results = process_video(tmp_path, output_path=output_path, return_video=draw)
     #return the contents from the video analysis and provide the download irl 
+    log_session(results["FGM"], results["FGA"])
     return JSONResponse(content={
         "message":f"Processed {file.filename}",
         "download_url": f"http://127.0.0.1:8000/download/{file.filename}",
         "FGM": results['FGM'],
         "FGA": results['FGA'],
-        "FG%": round(results["FGM"] / results["FGA"], 2) if results["FGA"] > 0 else 0.0
+        "FG_percent": round(results["FGM"] / results["FGA"], 2) if results["FGA"] > 0 else 0.0
 
     })
 
@@ -75,3 +87,20 @@ def live_video():
         "FGA": results.get("FGA", 0),
         "FG%": round(results["FGM"] / results["FGA"], 2) if results["FGA"] > 0 else 0.0
     })
+
+
+def log_session(fgm, fga):
+    try:
+        with open(LOG_FILE, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = []
+    data.append({
+        "date": datetime.now().isoformat(),
+        "FGM": fgm,
+        "FGA": fga,
+        "FG_percent": round(fgm / fga, 2) if fga > 0 else 0.0
+                 })
+    with open(LOG_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+

@@ -19,7 +19,7 @@ export default function StatsScreen(){
     //then json stores teh data with set data into data 
     //catch catches and errors 
     useEffect(() => {
-        fetch("http://127.0.0.1:8000/get_history")
+        fetch("http://192.168.1.218:8000/get_history")
         .then((res) => res.json())
         .then((json) => setData(json.sessions || []))
         .catch((err) => console.error("Error fetching history:",err)) 
@@ -32,7 +32,7 @@ export default function StatsScreen(){
         );
     }
     const labels = data.map((s) =>
-        new Date(s.timestamp).toLocaleDateString()
+        new Date(s.date).toLocaleDateString()
     );
     const fgPercent = data.map((s) => s.FG_percent * 100);
     return (
@@ -50,7 +50,7 @@ export default function StatsScreen(){
                 chartConfig={{
                     backgroundGradientFrom: "#1E1E1E",
                     backgroundGradientTo: "#333",
-                    color: (opacity = 1) => 'rgba(255, 215, 0, ${opacicty})',
+                    color: (opacity = 1) => `rgba(255, 215, 0, ${opacity})`,
                     labelColor: () => "#fff",
                 }}
                 style={styles.chart}
@@ -60,7 +60,7 @@ export default function StatsScreen(){
 }
 
 const styles = StyleSheet.create({
-    container: {flex: 1, backgroundColor: "121212"},
+    container: {flex: 1, backgroundColor: "#121212"},
     header: {
         color: "white",
         fontSize:22,
