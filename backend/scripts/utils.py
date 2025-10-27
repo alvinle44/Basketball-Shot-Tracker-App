@@ -40,7 +40,7 @@ def score_prediction(ball_traj, rim_box):
     if len(ball_traj) < 3 or rim_box is None:
         return False
     (rx1, ry1, rx2, ry2) = rim_box
-    rim_y = ry1 + 0.3 * (ry2 - ry1)
+    rim_y = ry1 + 0.5 * (ry2 - ry1) 
     x, y = [], []
     for i in reversed(range(len(ball_traj))):
         bx, by = ball_traj[i]
@@ -55,6 +55,7 @@ def score_prediction(ball_traj, rim_box):
     if len(x) > 1:
         m, b = np.polyfit(x, y, 1)
         pred_x = (rim_y - b) / m
-        rim_x1 = (rx1 + rx2) / 2 - 0.35 * (rx2 - rx1)
-        rim_x2 = (rx1 + rx2) / 2 + 0.35 * (rx2 - rx1)
+        rim_x1 = (rx1 + rx2) / 2 - 0.5 * (rx2 - rx1)
+        rim_x2 = (rx1 + rx2) / 2 + 0.5 * (rx2 - rx1)
         return rim_x1 < pred_x < rim_x2
+    return False

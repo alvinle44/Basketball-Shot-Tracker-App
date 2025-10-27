@@ -12,8 +12,8 @@ def process_video(video_path=None, output_path=None, return_video=False):
     #load the device 
     device = get_device()
     #load trained ball and rim tracking model 
-    model = YOLO("model/best_ball.pt")
-
+    model = YOLO("model/best.pt")
+    out = None
     #load video to be processed 
     if not video_path:
         cap = cv2.VideoCapture(0)
@@ -106,7 +106,8 @@ def process_video(video_path=None, output_path=None, return_video=False):
         #if no rim was detectd, this frame can be skipped 
         #later on implement logic for two rims and whichever rim the ball is closest to assign to that rim for make/miss tracking for now it is ok 
         if not rim_box:
-            out.write(frame)
+            if return_video:
+                out.write(frame)
             continue
         #get coords of the rim detected
         rx1, ry1, rx2, ry2 = rim_box
@@ -263,7 +264,7 @@ def process_video(video_path=None, output_path=None, return_video=False):
 
 
             #if the ball is going up/being attemtped
-            if detect_up(traj, rim_box) and vy > 0:
+            if detect_up(traj, rim_box) and vy < 0:
                 #if the ball is being attemtped and not in the cooldown zone, increment the shot attempt by 1 as the ball goes up
                 #this prevents the ball from being count as two shots 
                 if bid not in cooldowns or frame_idx - cooldowns[bid] > COOLDOWN_FRAMES:
@@ -281,7 +282,10 @@ def process_video(video_path=None, output_path=None, return_video=False):
                     #if both are true, we predict the shot as made
                     if bid not in cooldowns or frame_idx - cooldowns[bid] > COOLDOWN_FRAMES:
                         #increment the shot made
+                        if last_state.get(bid) != "attempting":
+                            fga += 1
                         fgm += 1
+                        print(f"[DEBUG] fgm now {fgm}")
                         #set cool down as current frame to ensure the ball is not double counted 
                         cooldowns[bid] = frame_idx
                         last_state[bid] = "made"
@@ -314,11 +318,9 @@ def process_video(video_path=None, output_path=None, return_video=False):
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
         if return_video:
             out.write(frame)
-        # cv2.imshow("Shot Tracker (Geo + Merge)", frame)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
 
     cap.release()
+    print(f"[AFTER LOOP] FGM={fgm}, FGA={fga}")
     if out is not None:
         out.release()
     if return_video:
@@ -326,4 +328,5 @@ def process_video(video_path=None, output_path=None, return_video=False):
     print(f"Done. Logged {fgm} / {fga}")
     with open("shot_log.json", "w") as f:
         json.dump({"FGM": fgm, "FGA": fga}, f, indent=4)
+    print(f"[RETURNING] FGM={fgm}, FGA={fga}")
     return {"FGM": fgm, "FGA": fga}
